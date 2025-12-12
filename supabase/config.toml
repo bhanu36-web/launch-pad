@@ -1,1 +1,4 @@
 project_id = "sdsruvkninkrldjvtbjh"
+
+[functions.process-farm-activity]
+verify_jwt = true

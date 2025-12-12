@@ -33,18 +33,18 @@ export function HeroSection({ scrollY, onNavigate }: HeroSectionProps) {
           <Button
             variant="hero"
             size="xl"
-            onClick={() => onNavigate('get-started')}
+            onClick={() => window.location.href = '/auth'}
             className="group"
           >
             <Smartphone className="w-5 h-5 group-hover:animate-bounce" />
-            Start Logging
+            Sign Up
           </Button>
           <Button
             variant="outline"
             size="xl"
-            onClick={() => onNavigate('learn-more')}
+            onClick={() => window.location.href = '/auth'}
           >
-            Learn More
+            Login
           </Button>
         </div>
       </div>
