@@ -10,19 +10,47 @@ import { ImpactSection } from '@/components/ImpactSection';
 import { Footer } from '@/components/Footer';
 import { GetStartedPage } from '@/components/GetStartedPage';
 import { LearnMorePage } from '@/components/LearnMorePage';
+import { Dashboard } from '@/components/Dashboard';
 import { useScrollY, useIntersectionObserver } from '@/hooks/use-scroll';
 
-type PageType = 'home' | 'get-started' | 'learn-more';
+type PageType = 'home' | 'get-started' | 'learn-more' | 'dashboard';
+
+interface FarmerData {
+  name: string;
+  location: string;
+  farmSize: string;
+}
 
 const Index = () => {
   const [currentPage, setCurrentPage] = useState<PageType>('home');
+  const [farmerData, setFarmerData] = useState<FarmerData>({ name: '', location: '', farmSize: '' });
   const scrollY = useScrollY();
   const isVisible = useIntersectionObserver(0.1);
 
-  const navigateTo = (page: string) => {
+  const navigateTo = (page: string, data?: FarmerData) => {
+    if (data) {
+      setFarmerData(data);
+    }
     setCurrentPage(page as PageType);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  if (currentPage === 'dashboard') {
+    return (
+      <>
+        <Helmet>
+          <title>Dashboard - AgriLog | Your Farm at a Glance</title>
+          <meta name="description" content="View your farm logs, insights, and analytics. Manage your agricultural records with AgriLog's AI-powered dashboard." />
+        </Helmet>
+        <Dashboard
+          onNavigate={navigateTo}
+          farmerName={farmerData.name || 'Farmer'}
+          farmLocation={farmerData.location || 'Your Farm'}
+          farmSize={farmerData.farmSize || '0'}
+        />
+      </>
+    );
+  }
 
   if (currentPage === 'get-started') {
     return (
