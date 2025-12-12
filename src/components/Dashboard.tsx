@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Mic,
   PenLine,
@@ -88,6 +88,26 @@ const weatherData = {
 
 export function Dashboard({ onNavigate, farmerName, farmLocation, farmSize }: DashboardProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'logs' | 'insights' | 'profile'>('overview');
+
+  // Load Relevance AI chatbot script
+  useEffect(() => {
+    const existingScript = document.querySelector('script[data-relevanceai-share-id]');
+    if (existingScript) return;
+
+    const script = document.createElement('script');
+    script.defer = true;
+    script.setAttribute('data-relevanceai-share-id', 'd7b62b/d7bfbb61ed4a-4a27-99cd-9978733cf0ba/24aaf956-79d6-4ae9-b4c8-04c0c2f80d05');
+    script.src = 'https://app.relevanceai.com/embed/chat-bubble.js';
+    script.setAttribute('data-share-styles', 'hide_tool_steps=false&hide_file_uploads=false&hide_conversation_list=false&bubble_style=agent&primary_color=%23685FFF&bubble_icon=pd%2Fchat&input_placeholder_text=Type+your+message...&hide_logo=false&hide_description=false');
+    document.body.appendChild(script);
+
+    return () => {
+      const scriptToRemove = document.querySelector('script[data-relevanceai-share-id]');
+      if (scriptToRemove) {
+        scriptToRemove.remove();
+      }
+    };
+  }, []);
 
   const handleNewLog = (type: 'voice' | 'text') => {
     if (type === 'voice') {
