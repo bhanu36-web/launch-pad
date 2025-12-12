@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
 interface GetStartedPageProps {
-  onNavigate: (page: string) => void;
+  onNavigate: (page: string, data?: { name: string; location: string; farmSize: string }) => void;
 }
 
 interface FormData {
@@ -62,11 +62,17 @@ export function GetStartedPage({ onNavigate }: GetStartedPageProps) {
     }
 
     toast.success(`Welcome to AgriLog, ${formData.name}!`, {
-      description: `Your account has been created. A verification code has been sent to ${formData.phone}.`,
+      description: 'Your account has been created. Redirecting to your dashboard...',
     });
 
-    setFormData({ name: '', phone: '', location: '', farmSize: '' });
-    setTimeout(() => onNavigate('home'), 2000);
+    // Pass user data to dashboard
+    setTimeout(() => {
+      onNavigate('dashboard', {
+        name: formData.name,
+        location: formData.location,
+        farmSize: formData.farmSize,
+      });
+    }, 1500);
   };
 
   return (
