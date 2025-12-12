@@ -14,16 +14,206 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      data_permissions: {
+        Row: {
+          created_at: string | null
+          data_range: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          permission_type: string | null
+          shared_with_email: string
+          shared_with_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          data_range?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          permission_type?: string | null
+          shared_with_email: string
+          shared_with_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          data_range?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          permission_type?: string | null
+          shared_with_email?: string
+          shared_with_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      farm_activities: {
+        Row: {
+          activity_date: string | null
+          activity_type: string
+          ai_extracted_data: Json | null
+          ai_summary: string | null
+          created_at: string | null
+          crop: string | null
+          field_id: string | null
+          id: string
+          inputs_used: string | null
+          location_lat: number | null
+          location_lng: number | null
+          media_urls: string[] | null
+          notes: string | null
+          sync_status: string | null
+          updated_at: string | null
+          user_id: string
+          yield_estimate: string | null
+        }
+        Insert: {
+          activity_date?: string | null
+          activity_type: string
+          ai_extracted_data?: Json | null
+          ai_summary?: string | null
+          created_at?: string | null
+          crop?: string | null
+          field_id?: string | null
+          id?: string
+          inputs_used?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          media_urls?: string[] | null
+          notes?: string | null
+          sync_status?: string | null
+          updated_at?: string | null
+          user_id: string
+          yield_estimate?: string | null
+        }
+        Update: {
+          activity_date?: string | null
+          activity_type?: string
+          ai_extracted_data?: Json | null
+          ai_summary?: string | null
+          created_at?: string | null
+          crop?: string | null
+          field_id?: string | null
+          id?: string
+          inputs_used?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          media_urls?: string[] | null
+          notes?: string | null
+          sync_status?: string | null
+          updated_at?: string | null
+          user_id?: string
+          yield_estimate?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farm_activities_field_id_fkey"
+            columns: ["field_id"]
+            isOneToOne: false
+            referencedRelation: "fields"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fields: {
+        Row: {
+          created_at: string | null
+          id: string
+          location_lat: number | null
+          location_lng: number | null
+          name: string
+          size_acres: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          location_lat?: number | null
+          location_lng?: number | null
+          name: string
+          size_acres?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          location_lat?: number | null
+          location_lng?: number | null
+          name?: string
+          size_acres?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          full_name: string
+          id: string
+          phone_number: string
+          preferred_language: string | null
+          updated_at: string | null
+          user_id: string
+          village_location: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          full_name: string
+          id?: string
+          phone_number: string
+          preferred_language?: string | null
+          updated_at?: string | null
+          user_id: string
+          village_location?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          full_name?: string
+          id?: string
+          phone_number?: string
+          preferred_language?: string | null
+          updated_at?: string | null
+          user_id?: string
+          village_location?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "farmer" | "institution" | "enumerator" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +340,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["farmer", "institution", "enumerator", "admin"],
+    },
   },
 } as const
