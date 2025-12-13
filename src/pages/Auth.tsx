@@ -17,18 +17,29 @@ import {
   Shield,
   Eye,
   EyeOff,
-  Leaf
+  Leaf,
+  Upload
 } from 'lucide-react';
 
 type AuthMode = 'role-select' | 'signup' | 'login';
 type RoleType = 'farmer' | 'institution' | 'enumerator' | 'admin';
 
-const signupSchema = z.object({
+const farmerSignupSchema = z.object({
   fullName: z.string().min(2, 'Name must be at least 2 characters').max(100),
   phoneNumber: z.string().min(10, 'Enter a valid phone number').max(20),
   email: z.string().email('Enter a valid email'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   villageLocation: z.string().optional(),
+  preferredLanguage: z.string().default('en'),
+});
+
+const extensionSignupSchema = z.object({
+  fullName: z.string().min(2, 'Name must be at least 2 characters').max(100),
+  organization: z.string().min(2, 'Organization is required').max(100),
+  phoneNumber: z.string().min(10, 'Enter a valid phone number').max(20),
+  districtRegion: z.string().min(2, 'District/Region is required').max(100),
+  email: z.string().email('Enter a valid email'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
   preferredLanguage: z.string().default('en'),
 });
 
@@ -46,7 +57,9 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
+    organization: '',
     phoneNumber: '',
+    districtRegion: '',
     email: '',
     password: '',
     villageLocation: '',
@@ -63,8 +76,8 @@ export default function Auth() {
 
   const roles = [
     { id: 'farmer' as RoleType, label: 'Farmer', icon: Leaf, description: 'Record and manage your farm activities' },
+    { id: 'enumerator' as RoleType, label: 'Extension Worker', icon: ClipboardList, description: 'Help farmers capture accurate records' },
     { id: 'institution' as RoleType, label: 'Institution', icon: Building, description: 'Access verified farmer data' },
-    { id: 'enumerator' as RoleType, label: 'Enumerator', icon: ClipboardList, description: 'Collect data for organizations' },
     { id: 'admin' as RoleType, label: 'Admin', icon: Shield, description: 'Manage platform settings' },
   ];
 
@@ -90,7 +103,12 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      const validated = signupSchema.parse(formData);
+      // Validate based on role
+      if (selectedRole === 'enumerator') {
+        extensionSignupSchema.parse(formData);
+      } else {
+        farmerSignupSchema.parse(formData);
+      }
       
       if (!formData.agreeToTerms) {
         setErrors({ agreeToTerms: 'You must agree to the terms' });
@@ -98,10 +116,10 @@ export default function Auth() {
         return;
       }
 
-      const { error } = await signUp(validated.email, validated.password, {
-        full_name: validated.fullName,
-        phone_number: validated.phoneNumber,
-        preferred_language: validated.preferredLanguage,
+      const { error } = await signUp(formData.email, formData.password, {
+        full_name: formData.fullName,
+        phone_number: formData.phoneNumber,
+        preferred_language: formData.preferredLanguage,
       });
 
       if (error) {
@@ -123,16 +141,24 @@ export default function Auth() {
           role: selectedRole,
         });
 
-        // Update profile with village location if provided
-        if (validated.villageLocation) {
-          await supabase.from('profiles').update({
-            village_location: validated.villageLocation,
-          }).eq('user_id', newUser.id);
+        // Update profile with location if provided
+        const updateData: Record<string, string> = {};
+        if (formData.villageLocation) {
+          updateData.village_location = formData.villageLocation;
+        }
+        if (selectedRole === 'enumerator' && formData.districtRegion) {
+          updateData.village_location = formData.districtRegion;
+        }
+        
+        if (Object.keys(updateData).length > 0) {
+          await supabase.from('profiles').update(updateData).eq('user_id', newUser.id);
         }
       }
 
-      toast.success('Signup successful!');
-      navigate('/dashboard');
+      toast.success('Signup successful!', { duration: 2000 });
+      setTimeout(() => {
+        setMode('login');
+      }, 2000);
     } catch (err) {
       if (err instanceof z.ZodError) {
         const fieldErrors: Record<string, string> = {};
@@ -178,6 +204,25 @@ export default function Auth() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getRoleLabel = () => {
+    if (selectedRole === 'enumerator') return 'Extension Worker';
+    return selectedRole?.charAt(0).toUpperCase() + selectedRole?.slice(1);
+  };
+
+  const getTermsText = () => {
+    if (selectedRole === 'enumerator') {
+      return 'I agree to data terms & responsibilities as an extension worker';
+    }
+    return 'I agree to the data terms & consent. My data is private and I own my records.';
+  };
+
+  const getMicrocopy = () => {
+    if (selectedRole === 'enumerator') {
+      return 'You help farmers capture accurate records. Your entries are marked as verified.';
+    }
+    return 'We keep your data private. You own your records.';
   };
 
   return (
@@ -245,10 +290,10 @@ export default function Auth() {
             {mode === 'signup' && (
               <div className="animate-fade-in-up">
                 <h1 className="text-3xl font-bold text-foreground mb-2 text-center">
-                  Create {selectedRole?.charAt(0).toUpperCase()}{selectedRole?.slice(1)} Account
+                  Create {getRoleLabel()} Account
                 </h1>
                 <p className="text-muted-foreground text-center mb-8">
-                  We keep your data private. You own your records.
+                  {getMicrocopy()}
                 </p>
 
                 <form onSubmit={handleSignup} className="glass rounded-2xl p-6 space-y-4">
@@ -264,6 +309,37 @@ export default function Auth() {
                     />
                     {errors.fullName && <p className="text-destructive text-sm mt-1">{errors.fullName}</p>}
                   </div>
+
+                  {/* Extension Worker specific fields */}
+                  {selectedRole === 'enumerator' && (
+                    <>
+                      <div>
+                        <Label htmlFor="organization">Organization / Affiliation *</Label>
+                        <Input
+                          id="organization"
+                          name="organization"
+                          value={formData.organization}
+                          onChange={handleInputChange}
+                          placeholder="Your organization name"
+                          className="mt-1"
+                        />
+                        {errors.organization && <p className="text-destructive text-sm mt-1">{errors.organization}</p>}
+                      </div>
+
+                      <div>
+                        <Label htmlFor="districtRegion">District / Region *</Label>
+                        <Input
+                          id="districtRegion"
+                          name="districtRegion"
+                          value={formData.districtRegion}
+                          onChange={handleInputChange}
+                          placeholder="Your assigned district or region"
+                          className="mt-1"
+                        />
+                        {errors.districtRegion && <p className="text-destructive text-sm mt-1">{errors.districtRegion}</p>}
+                      </div>
+                    </>
+                  )}
 
                   <div>
                     <Label htmlFor="phoneNumber">Phone Number *</Label>
@@ -315,17 +391,31 @@ export default function Auth() {
                     {errors.password && <p className="text-destructive text-sm mt-1">{errors.password}</p>}
                   </div>
 
-                  <div>
-                    <Label htmlFor="villageLocation">Village / Location (optional)</Label>
-                    <Input
-                      id="villageLocation"
-                      name="villageLocation"
-                      value={formData.villageLocation}
-                      onChange={handleInputChange}
-                      placeholder="Your village or location"
-                      className="mt-1"
-                    />
-                  </div>
+                  {/* Farmer specific field */}
+                  {selectedRole === 'farmer' && (
+                    <div>
+                      <Label htmlFor="villageLocation">Village / Location (optional)</Label>
+                      <Input
+                        id="villageLocation"
+                        name="villageLocation"
+                        value={formData.villageLocation}
+                        onChange={handleInputChange}
+                        placeholder="Your village or location"
+                        className="mt-1"
+                      />
+                    </div>
+                  )}
+
+                  {/* Extension Worker optional upload */}
+                  {selectedRole === 'enumerator' && (
+                    <div>
+                      <Label htmlFor="certification">Upload ID / Certification (optional)</Label>
+                      <div className="mt-1 border-2 border-dashed border-border rounded-lg p-4 text-center hover:border-primary/50 transition-colors cursor-pointer">
+                        <Upload className="w-6 h-6 mx-auto text-muted-foreground mb-2" />
+                        <p className="text-sm text-muted-foreground">Click to upload or drag & drop</p>
+                      </div>
+                    </div>
+                  )}
 
                   <div>
                     <Label htmlFor="preferredLanguage">Preferred Language</Label>
@@ -352,7 +442,7 @@ export default function Auth() {
                       className="mt-1"
                     />
                     <Label htmlFor="agreeToTerms" className="text-sm text-muted-foreground">
-                      I agree to the data terms & consent. My data is private and I own my records.
+                      {getTermsText()}
                     </Label>
                   </div>
                   {errors.agreeToTerms && <p className="text-destructive text-sm">{errors.agreeToTerms}</p>}
