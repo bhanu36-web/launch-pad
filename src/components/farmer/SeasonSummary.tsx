@@ -159,54 +159,123 @@ export function SeasonSummary() {
     <div className="animate-fade-in-up space-y-4">
       <h2 className="text-xl font-semibold text-foreground">Season Summary</h2>
 
-      {/* Quick Summary Section */}
-      <div className="glass rounded-2xl p-6 border-l-4 border-primary">
-        <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+      {/* Detailed Summary Section */}
+      <div className="glass rounded-2xl p-6 border-l-4 border-primary space-y-5">
+        <h3 className="font-semibold text-lg text-foreground flex items-center gap-2">
           <Sprout className="w-5 h-5 text-primary" />
           Your Farm at a Glance
         </h3>
-        <ul className="space-y-2 text-sm text-muted-foreground">
-          <li className="flex items-start gap-2">
-            <span className="text-primary font-bold">•</span>
-            <span>You recorded <strong className="text-foreground">{stats.total} activities</strong> this season.</span>
-          </li>
-          {topActivity && (
+
+        {/* Introduction Paragraph */}
+        <p className="text-muted-foreground leading-relaxed">
+          This season, you have been busy on your farm! You recorded a total of <strong className="text-foreground">{stats.total} activities</strong> across your fields. 
+          Keeping good records helps you understand your farm better, plan for the future, and share your progress with others when needed. 
+          Below is a simple breakdown of what you have been doing this season.
+        </p>
+
+        {/* Key Points */}
+        <div className="space-y-3">
+          <h4 className="font-medium text-foreground">Key Highlights:</h4>
+          <ul className="space-y-2 text-sm text-muted-foreground pl-1">
             <li className="flex items-start gap-2">
-              <span className="text-primary font-bold">•</span>
-              <span>Your most common activity is <strong className="text-foreground">{topActivity[0]}</strong> ({topActivity[1]} times).</span>
+              <span className="text-primary font-bold mt-0.5">•</span>
+              <span>You recorded <strong className="text-foreground">{stats.total} activities</strong> in total this season. Each activity you log becomes part of your farm history.</span>
             </li>
-          )}
-          {topCrop && (
-            <li className="flex items-start gap-2">
-              <span className="text-primary font-bold">•</span>
-              <span>You worked mostly on <strong className="text-foreground">{topCrop[0]}</strong> ({topCrop[1]} entries).</span>
-            </li>
-          )}
-          {busiestMonth && (
-            <li className="flex items-start gap-2">
-              <span className="text-primary font-bold">•</span>
-              <span>Your busiest month was <strong className="text-foreground">{busiestMonth[0]}</strong> with {busiestMonth[1]} activities.</span>
-            </li>
-          )}
-          {activityTypes > 1 && (
-            <li className="flex items-start gap-2">
-              <span className="text-primary font-bold">•</span>
-              <span>You did <strong className="text-foreground">{activityTypes} different types</strong> of activities.</span>
-            </li>
-          )}
-          {cropTypes > 1 && (
-            <li className="flex items-start gap-2">
-              <span className="text-primary font-bold">•</span>
-              <span>You grew <strong className="text-foreground">{cropTypes} different crops</strong> this season.</span>
-            </li>
-          )}
-          {pestCount > 0 && (
-            <li className="flex items-start gap-2">
-              <span className="text-destructive font-bold">•</span>
-              <span className="text-destructive">You reported <strong>{pestCount} pest issues</strong> — keep monitoring!</span>
-            </li>
-          )}
-        </ul>
+            {topActivity && (
+              <li className="flex items-start gap-2">
+                <span className="text-primary font-bold mt-0.5">•</span>
+                <span>Your most common activity was <strong className="text-foreground">{topActivity[0]}</strong>, which you did <strong className="text-foreground">{topActivity[1]} times</strong>. This shows where you spent most of your effort.</span>
+              </li>
+            )}
+            {topCrop && (
+              <li className="flex items-start gap-2">
+                <span className="text-primary font-bold mt-0.5">•</span>
+                <span>You worked mostly on <strong className="text-foreground">{topCrop[0]}</strong> with <strong className="text-foreground">{topCrop[1]} recorded entries</strong>. This crop received the most attention from you this season.</span>
+              </li>
+            )}
+            {busiestMonth && (
+              <li className="flex items-start gap-2">
+                <span className="text-primary font-bold mt-0.5">•</span>
+                <span>Your busiest month was <strong className="text-foreground">{busiestMonth[0]}</strong> when you logged <strong className="text-foreground">{busiestMonth[1]} activities</strong>. This was likely a peak time for farm work.</span>
+              </li>
+            )}
+            {activityTypes > 1 && (
+              <li className="flex items-start gap-2">
+                <span className="text-primary font-bold mt-0.5">•</span>
+                <span>You performed <strong className="text-foreground">{activityTypes} different types</strong> of activities. Having variety in your work shows a well-rounded farming practice.</span>
+              </li>
+            )}
+            {cropTypes > 1 && (
+              <li className="flex items-start gap-2">
+                <span className="text-primary font-bold mt-0.5">•</span>
+                <span>You grew <strong className="text-foreground">{cropTypes} different crops</strong> this season. Growing multiple crops can help reduce risk and improve soil health.</span>
+              </li>
+            )}
+          </ul>
+        </div>
+
+        {/* Activity Breakdown Paragraph */}
+        {Object.keys(stats.byType).length > 0 && (
+          <div className="space-y-2">
+            <h4 className="font-medium text-foreground">What You Did:</h4>
+            <p className="text-muted-foreground leading-relaxed text-sm">
+              Looking at your activities in detail, here is how your time was spent: {Object.entries(stats.byType).map(([type, count], index, arr) => (
+                <span key={type}>
+                  <strong className="text-foreground">{type}</strong> ({count} {count === 1 ? 'time' : 'times'}){index < arr.length - 2 ? ', ' : index === arr.length - 2 ? ', and ' : ''}
+                </span>
+              ))}. Each type of activity plays an important role in keeping your farm productive and healthy.
+            </p>
+          </div>
+        )}
+
+        {/* Crops Paragraph */}
+        {Object.keys(stats.byCrop).length > 0 && (
+          <div className="space-y-2">
+            <h4 className="font-medium text-foreground">Your Crops:</h4>
+            <p className="text-muted-foreground leading-relaxed text-sm">
+              This season, you worked on the following crops: {Object.entries(stats.byCrop).map(([crop, count], index, arr) => (
+                <span key={crop}>
+                  <strong className="text-foreground">{crop}</strong> ({count} {count === 1 ? 'entry' : 'entries'}){index < arr.length - 2 ? ', ' : index === arr.length - 2 ? ', and ' : ''}
+                </span>
+              ))}. Your records help track what is growing well and what might need more attention next season.
+            </p>
+          </div>
+        )}
+
+        {/* Monthly Trend Paragraph */}
+        {Object.keys(stats.byMonth).length > 0 && (
+          <div className="space-y-2">
+            <h4 className="font-medium text-foreground">When You Were Active:</h4>
+            <p className="text-muted-foreground leading-relaxed text-sm">
+              Your farm activity was spread across the months as follows: {Object.entries(stats.byMonth).map(([month, count], index, arr) => (
+                <span key={month}>
+                  <strong className="text-foreground">{month}</strong> ({count} {count === 1 ? 'activity' : 'activities'}){index < arr.length - 2 ? ', ' : index === arr.length - 2 ? ', and ' : ''}
+                </span>
+              ))}. Understanding your busy periods helps you plan better for the next season.
+            </p>
+          </div>
+        )}
+
+        {/* Pest Warning */}
+        {pestCount > 0 && (
+          <div className="space-y-2 p-4 rounded-xl bg-destructive/10 border border-destructive/20">
+            <h4 className="font-medium text-destructive flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" />
+              Pest Alert
+            </h4>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              You reported <strong className="text-destructive">{pestCount} pest {pestCount === 1 ? 'issue' : 'issues'}</strong> this season. 
+              Pests can harm your crops and reduce your harvest. Keep watching your fields closely, and consider talking to an extension worker or agronomist for advice on how to manage pests effectively.
+            </p>
+          </div>
+        )}
+
+        {/* Closing Paragraph */}
+        <p className="text-muted-foreground leading-relaxed text-sm border-t border-border pt-4">
+          Keep logging your activities regularly! The more you record, the better you can understand your farm. 
+          Your records can also help you when applying for loans, insurance, or government support programs. 
+          Banks and institutions trust farmers who have good records. Scroll down to see detailed charts and graphs of your farm activities.
+        </p>
       </div>
 
       {/* Overview Card */}
@@ -221,7 +290,7 @@ export function SeasonSummary() {
           </div>
         </div>
         <p className="text-sm text-muted-foreground">
-          You logged {stats.total} activities this season.
+          You logged {stats.total} activities this season. Each record contributes to your verifiable farm history.
         </p>
       </div>
 
