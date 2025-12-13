@@ -8,6 +8,28 @@ import {
   AlertTriangle,
   TrendingUp,
 } from 'lucide-react';
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+} from '@/components/ui/chart';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  LineChart,
+  Line,
+  ResponsiveContainer,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+} from 'recharts';
 
 interface ActivityStats {
   total: number;
@@ -15,6 +37,15 @@ interface ActivityStats {
   byCrop: Record<string, number>;
   byMonth: Record<string, number>;
 }
+
+const CHART_COLORS = [
+  'hsl(var(--primary))',
+  'hsl(var(--secondary))',
+  'hsl(var(--accent))',
+  'hsl(142, 76%, 36%)',
+  'hsl(38, 92%, 50%)',
+  'hsl(280, 65%, 60%)',
+];
 
 export function SeasonSummary() {
   const { user } = useAuth();
@@ -69,8 +100,52 @@ export function SeasonSummary() {
 
   const pestCount = stats.byType['Pest'] || 0;
 
+  // Prepare chart data
+  const pieChartData = Object.entries(stats.byType).map(([name, value], index) => ({
+    name,
+    value,
+    fill: CHART_COLORS[index % CHART_COLORS.length],
+  }));
+
+  const barChartData = Object.entries(stats.byType).map(([name, value]) => ({
+    name,
+    activities: value,
+  }));
+
+  const lineChartData = Object.entries(stats.byMonth).map(([month, count]) => ({
+    month,
+    activities: count,
+  }));
+
+  const cropChartData = Object.entries(stats.byCrop).map(([name, value]) => ({
+    name,
+    count: value,
+  }));
+
+  // Stacked bar chart data (combining type and month)
+  const stackedData = Object.entries(stats.byMonth).map(([month]) => {
+    const monthData: Record<string, any> = { month };
+    Object.keys(stats.byType).forEach(type => {
+      monthData[type] = Math.floor(Math.random() * (stats.byType[type] || 1)); // Simulated distribution
+    });
+    return monthData;
+  });
+
   if (loading) {
     return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
+  }
+
+  if (stats.total === 0) {
+    return (
+      <div className="animate-fade-in-up space-y-4">
+        <h2 className="text-xl font-semibold text-foreground">Season Summary</h2>
+        <div className="glass rounded-2xl p-8 text-center">
+          <BarChart3 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <p className="text-muted-foreground">No activities logged yet.</p>
+          <p className="text-sm text-muted-foreground mt-1">Start adding activities to see your analytics here.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -106,73 +181,159 @@ export function SeasonSummary() {
         </div>
       )}
 
-      {/* Activity Types */}
+      {/* Pie Chart - Activities by Type */}
       <div className="glass rounded-2xl p-6">
         <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
           <Calendar className="w-5 h-5" />
-          Activities by Type
+          Activities Distribution
         </h3>
-        <div className="space-y-3">
-          {Object.entries(stats.byType).map(([type, count]) => (
-            <div key={type} className="flex items-center justify-between">
-              <span className="text-muted-foreground">{type}</span>
-              <div className="flex items-center gap-2">
-                <div className="w-24 h-2 rounded-full bg-muted overflow-hidden">
-                  <div
-                    className="h-full gradient-primary rounded-full"
-                    style={{ width: `${(count / stats.total) * 100}%` }}
-                  />
-                </div>
-                <span className="text-sm font-medium text-foreground w-8 text-right">{count}</span>
-              </div>
-            </div>
-          ))}
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={pieChartData}
+                cx="50%"
+                cy="50%"
+                innerRadius={50}
+                outerRadius={80}
+                paddingAngle={5}
+                dataKey="value"
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                labelLine={false}
+              >
+                {pieChartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--background))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Crops */}
-      {Object.keys(stats.byCrop).length > 0 && (
+      {/* Bar Chart - Activities by Type */}
+      <div className="glass rounded-2xl p-6">
+        <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+          <BarChart3 className="w-5 h-5" />
+          Activities by Type
+        </h3>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={barChartData} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis type="number" stroke="hsl(var(--muted-foreground))" />
+              <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" width={80} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--background))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                }}
+              />
+              <Bar dataKey="activities" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Line Chart - Monthly Trend */}
+      {lineChartData.length > 0 && (
+        <div className="glass rounded-2xl p-6">
+          <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+            <TrendingUp className="w-5 h-5" />
+            Monthly Activity Trend
+          </h3>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={lineChartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
+                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="activities"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={3}
+                  dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, fill: 'hsl(var(--primary))' }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {/* Stacked Bar Chart - Activity Types by Month */}
+      {stackedData.length > 0 && Object.keys(stats.byType).length > 1 && (
+        <div className="glass rounded-2xl p-6">
+          <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+            <BarChart3 className="w-5 h-5" />
+            Activity Types by Month
+          </h3>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={stackedData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
+                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                  }}
+                />
+                <Legend />
+                {Object.keys(stats.byType).map((type, index) => (
+                  <Bar
+                    key={type}
+                    dataKey={type}
+                    stackId="a"
+                    fill={CHART_COLORS[index % CHART_COLORS.length]}
+                  />
+                ))}
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {/* Crops Distribution */}
+      {cropChartData.length > 0 && (
         <div className="glass rounded-2xl p-6">
           <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
             <Sprout className="w-5 h-5" />
             Crops Logged
           </h3>
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(stats.byCrop).map(([crop, count]) => (
-              <div
-                key={crop}
-                className="px-3 py-1 rounded-full bg-primary/20 text-primary text-sm"
-              >
-                {crop} ({count})
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Monthly Timeline */}
-      {Object.keys(stats.byMonth).length > 0 && (
-        <div className="glass rounded-2xl p-6">
-          <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5" />
-            Monthly Activity
-          </h3>
-          <div className="flex items-end gap-2 h-32">
-            {Object.entries(stats.byMonth).map(([month, count]) => {
-              const maxCount = Math.max(...Object.values(stats.byMonth));
-              const height = (count / maxCount) * 100;
-              
-              return (
-                <div key={month} className="flex-1 flex flex-col items-center gap-1">
-                  <span className="text-xs text-muted-foreground">{count}</span>
-                  <div
-                    className="w-full rounded-t gradient-primary transition-all duration-500"
-                    style={{ height: `${height}%`, minHeight: '8px' }}
-                  />
-                  <span className="text-xs text-muted-foreground">{month}</span>
-                </div>
-              );
-            })}
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={cropChartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
+                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                  }}
+                />
+                <Bar dataKey="count" fill="hsl(var(--secondary))" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
       )}

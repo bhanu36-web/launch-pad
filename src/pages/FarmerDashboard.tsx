@@ -192,7 +192,7 @@ export default function FarmerDashboard() {
 
                 <button
                   onClick={() => setActiveTab('summary')}
-                  className="glass rounded-2xl p-6 text-center transition-all duration-300 hover:scale-[1.02] group"
+                  className="glass rounded-2xl p-6 text-center transition-all duration-300 hover:scale-[1.02] hover:glow-accent group"
                 >
                   <div className="w-14 h-14 rounded-xl bg-accent flex items-center justify-center mx-auto mb-3">
                     <BarChart3 className="w-7 h-7 text-accent-foreground" />
@@ -203,12 +203,12 @@ export default function FarmerDashboard() {
 
                 <button
                   onClick={() => setActiveTab('share')}
-                  className="glass rounded-2xl p-6 text-center transition-all duration-300 hover:scale-[1.02] group"
+                  className="glass rounded-2xl p-6 text-center transition-all duration-300 hover:scale-[1.02] hover:glow-primary group"
                 >
                   <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center mx-auto mb-3">
                     <Share2 className="w-7 h-7 text-muted-foreground" />
                   </div>
-                  <h3 className="font-semibold text-foreground">Share / Permissions</h3>
+                  <h3 className="font-semibold text-foreground group-hover:text-primary">Share / Permissions</h3>
                   <p className="text-xs text-muted-foreground mt-1">Control access</p>
                 </button>
               </div>
