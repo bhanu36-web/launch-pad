@@ -7,7 +7,16 @@ import {
   Sprout,
   AlertTriangle,
   TrendingUp,
+  Bug,
 } from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import {
   ChartContainer,
   ChartTooltip,
@@ -36,6 +45,14 @@ interface ActivityStats {
   byType: Record<string, number>;
   byCrop: Record<string, number>;
   byMonth: Record<string, number>;
+  pestData: PestRecord[];
+}
+
+interface PestRecord {
+  year: string;
+  pestName: string;
+  occurrences: number;
+  affectedCrops: string[];
 }
 
 const CHART_COLORS = [
@@ -54,6 +71,7 @@ export function SeasonSummary() {
     byType: {},
     byCrop: {},
     byMonth: {},
+    pestData: [],
   });
   const [loading, setLoading] = useState(true);
 
@@ -73,6 +91,7 @@ export function SeasonSummary() {
       const byType: Record<string, number> = {};
       const byCrop: Record<string, number> = {};
       const byMonth: Record<string, number> = {};
+      const pestByYearAndCrop: Record<string, Record<string, Set<string>>> = {};
 
       data.forEach((activity: any) => {
         // Count by type
@@ -86,6 +105,34 @@ export function SeasonSummary() {
         // Count by month
         const month = new Date(activity.activity_date).toLocaleDateString('en-US', { month: 'short' });
         byMonth[month] = (byMonth[month] || 0) + 1;
+
+        // Track pest activities by year and crop
+        if (activity.activity_type === 'Pest' || activity.activity_type === 'pest_control') {
+          const year = new Date(activity.activity_date).getFullYear().toString();
+          const pestName = activity.inputs_used || activity.notes?.split(' ').slice(0, 3).join(' ') || 'General Pest Treatment';
+          const crop = activity.crop || 'Unspecified';
+          
+          if (!pestByYearAndCrop[year]) {
+            pestByYearAndCrop[year] = {};
+          }
+          if (!pestByYearAndCrop[year][pestName]) {
+            pestByYearAndCrop[year][pestName] = new Set();
+          }
+          pestByYearAndCrop[year][pestName].add(crop);
+        }
+      });
+
+      // Convert pest data to array format
+      const pestData: PestRecord[] = [];
+      Object.entries(pestByYearAndCrop).forEach(([year, pests]) => {
+        Object.entries(pests).forEach(([pestName, crops]) => {
+          pestData.push({
+            year,
+            pestName: pestName.substring(0, 50),
+            occurrences: crops.size,
+            affectedCrops: Array.from(crops),
+          });
+        });
       });
 
       setStats({
@@ -93,6 +140,7 @@ export function SeasonSummary() {
         byType,
         byCrop,
         byMonth,
+        pestData,
       });
     }
     setLoading(false);
@@ -277,6 +325,59 @@ export function SeasonSummary() {
           Banks and institutions trust farmers who have good records. Scroll down to see detailed charts and graphs of your farm activities.
         </p>
       </div>
+
+      {/* Pest Management History Table */}
+      {stats.pestData.length > 0 && (
+        <div className="glass rounded-2xl p-6">
+          <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+            <Bug className="w-5 h-5 text-destructive" />
+            Pest Management History
+          </h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            This table shows your pest control activities over time, helping you track patterns and plan future treatments.
+          </p>
+          <div className="rounded-lg border border-border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead className="font-semibold">Year</TableHead>
+                  <TableHead className="font-semibold">Treatment/Pest Type</TableHead>
+                  <TableHead className="font-semibold text-center">Application Count</TableHead>
+                  <TableHead className="font-semibold">Affected Crops</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {stats.pestData.map((record, index) => (
+                  <TableRow key={`${record.year}-${record.pestName}-${index}`}>
+                    <TableCell className="font-medium">{record.year}</TableCell>
+                    <TableCell>{record.pestName}</TableCell>
+                    <TableCell className="text-center">
+                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-destructive/10 text-destructive font-semibold text-sm">
+                        {record.occurrences}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {record.affectedCrops.map((crop, i) => (
+                          <span 
+                            key={i} 
+                            className="inline-block px-2 py-0.5 text-xs rounded-full bg-primary/10 text-primary"
+                          >
+                            {crop}
+                          </span>
+                        ))}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">
+            Tracking pest treatments helps identify recurring issues and improve your pest management strategy.
+          </p>
+        </div>
+      )}
 
       {/* Overview Card */}
       <div className="glass rounded-2xl p-6">

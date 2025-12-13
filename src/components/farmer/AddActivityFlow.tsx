@@ -238,7 +238,7 @@ export function AddActivityFlow({ onClose, onSave }: AddActivityFlowProps) {
         ai_summary: aiSummary,
         ai_extracted_data: aiExtractedData,
         sync_status: isOnline ? 'synced' : 'pending',
-        activity_date: new Date().toISOString(),
+        activity_date: formData.activityDate.toISOString(),
       });
 
       if (error) throw error;
@@ -399,17 +399,6 @@ export function AddActivityFlow({ onClose, onSave }: AddActivityFlowProps) {
                   placeholder="e.g., Maize, Beans, Tomatoes"
                   className="mt-1"
                 />
-              </div>
-
-              {/* Activity Date & Time (auto-filled) */}
-              <div>
-                <Label>Activity Date & Time</Label>
-                <Input
-                  value={format(new Date(), "dd/MM/yyyy HH:mm")}
-                  disabled
-                  className="mt-1 bg-muted"
-                />
-                <p className="text-xs text-muted-foreground mt-1">Auto-filled with current time</p>
               </div>
 
               {/* Notes */}
