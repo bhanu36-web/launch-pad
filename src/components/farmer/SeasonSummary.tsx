@@ -148,9 +148,66 @@ export function SeasonSummary() {
     );
   }
 
+  // Generate simple summary points
+  const topActivity = Object.entries(stats.byType).sort((a, b) => b[1] - a[1])[0];
+  const topCrop = Object.entries(stats.byCrop).sort((a, b) => b[1] - a[1])[0];
+  const busiestMonth = Object.entries(stats.byMonth).sort((a, b) => b[1] - a[1])[0];
+  const activityTypes = Object.keys(stats.byType).length;
+  const cropTypes = Object.keys(stats.byCrop).length;
+
   return (
     <div className="animate-fade-in-up space-y-4">
       <h2 className="text-xl font-semibold text-foreground">Season Summary</h2>
+
+      {/* Quick Summary Section */}
+      <div className="glass rounded-2xl p-6 border-l-4 border-primary">
+        <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+          <Sprout className="w-5 h-5 text-primary" />
+          Your Farm at a Glance
+        </h3>
+        <ul className="space-y-2 text-sm text-muted-foreground">
+          <li className="flex items-start gap-2">
+            <span className="text-primary font-bold">•</span>
+            <span>You recorded <strong className="text-foreground">{stats.total} activities</strong> this season.</span>
+          </li>
+          {topActivity && (
+            <li className="flex items-start gap-2">
+              <span className="text-primary font-bold">•</span>
+              <span>Your most common activity is <strong className="text-foreground">{topActivity[0]}</strong> ({topActivity[1]} times).</span>
+            </li>
+          )}
+          {topCrop && (
+            <li className="flex items-start gap-2">
+              <span className="text-primary font-bold">•</span>
+              <span>You worked mostly on <strong className="text-foreground">{topCrop[0]}</strong> ({topCrop[1]} entries).</span>
+            </li>
+          )}
+          {busiestMonth && (
+            <li className="flex items-start gap-2">
+              <span className="text-primary font-bold">•</span>
+              <span>Your busiest month was <strong className="text-foreground">{busiestMonth[0]}</strong> with {busiestMonth[1]} activities.</span>
+            </li>
+          )}
+          {activityTypes > 1 && (
+            <li className="flex items-start gap-2">
+              <span className="text-primary font-bold">•</span>
+              <span>You did <strong className="text-foreground">{activityTypes} different types</strong> of activities.</span>
+            </li>
+          )}
+          {cropTypes > 1 && (
+            <li className="flex items-start gap-2">
+              <span className="text-primary font-bold">•</span>
+              <span>You grew <strong className="text-foreground">{cropTypes} different crops</strong> this season.</span>
+            </li>
+          )}
+          {pestCount > 0 && (
+            <li className="flex items-start gap-2">
+              <span className="text-destructive font-bold">•</span>
+              <span className="text-destructive">You reported <strong>{pestCount} pest issues</strong> — keep monitoring!</span>
+            </li>
+          )}
+        </ul>
+      </div>
 
       {/* Overview Card */}
       <div className="glass rounded-2xl p-6">
