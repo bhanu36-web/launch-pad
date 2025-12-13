@@ -14,6 +14,114 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_requests: {
+        Row: {
+          access_type: string
+          approved_at: string | null
+          created_at: string
+          duration_days: number
+          expires_at: string | null
+          farmer_id: string
+          id: string
+          institution_id: string
+          request_reason: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          access_type?: string
+          approved_at?: string | null
+          created_at?: string
+          duration_days?: number
+          expires_at?: string | null
+          farmer_id: string
+          id?: string
+          institution_id: string
+          request_reason?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          access_type?: string
+          approved_at?: string | null
+          created_at?: string
+          duration_days?: number
+          expires_at?: string | null
+          farmer_id?: string
+          id?: string
+          institution_id?: string
+          request_reason?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      admin_profiles: {
+        Row: {
+          admin_key: string | null
+          created_at: string
+          id: string
+          organization: string | null
+          role_level: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_key?: string | null
+          created_at?: string
+          id?: string
+          organization?: string | null
+          role_level?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_key?: string | null
+          created_at?: string
+          id?: string
+          organization?: string | null
+          role_level?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      audit_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_type: string | null
+          created_at: string
+          details: Json | null
+          id: string
+          ip_address: string | null
+          target_id: string | null
+          target_type: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_type?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_type?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Relationships: []
+      }
       data_permissions: {
         Row: {
           created_at: string | null
@@ -148,6 +256,42 @@ export type Database = {
         }
         Relationships: []
       }
+      institution_profiles: {
+        Row: {
+          country_region: string | null
+          created_at: string
+          id: string
+          institution_type: string
+          organization_name: string
+          position_role: string | null
+          representative_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          country_region?: string | null
+          created_at?: string
+          id?: string
+          institution_type: string
+          organization_name: string
+          position_role?: string | null
+          representative_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          country_region?: string | null
+          created_at?: string
+          id?: string
+          institution_type?: string
+          organization_name?: string
+          position_role?: string | null
+          representative_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -178,6 +322,36 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           village_location?: string | null
+        }
+        Relationships: []
+      }
+      system_settings: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          setting_key: string
+          setting_value: Json
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          setting_key: string
+          setting_value: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          setting_key?: string
+          setting_value?: Json
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
