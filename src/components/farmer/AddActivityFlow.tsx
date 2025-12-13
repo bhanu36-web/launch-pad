@@ -1,10 +1,15 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import {
   ArrowLeft,
@@ -23,6 +28,8 @@ import {
   Loader2,
   X,
   Upload,
+  CalendarIcon,
+  Plus,
 } from 'lucide-react';
 
 interface AddActivityFlowProps {
@@ -50,6 +57,9 @@ export function AddActivityFlow({ onClose, onSave }: AddActivityFlowProps) {
   
   const [formData, setFormData] = useState({
     activityType: '' as ActivityType | '',
+    activityDate: new Date(),
+    fieldId: '',
+    fieldName: '',
     crop: '',
     notes: '',
     inputsUsed: '',
@@ -57,6 +67,45 @@ export function AddActivityFlow({ onClose, onSave }: AddActivityFlowProps) {
     locationLat: null as number | null,
     locationLng: null as number | null,
   });
+
+  const [fields, setFields] = useState<{ id: string; name: string }[]>([]);
+  const [showNewField, setShowNewField] = useState(false);
+  const [newFieldName, setNewFieldName] = useState('');
+
+  useEffect(() => {
+    if (user) {
+      fetchFields();
+    }
+  }, [user]);
+
+  const fetchFields = async () => {
+    const { data, error } = await supabase
+      .from('fields')
+      .select('id, name')
+      .eq('user_id', user?.id);
+    
+    if (!error && data) {
+      setFields(data);
+    }
+  };
+
+  const handleAddField = async () => {
+    if (!newFieldName.trim() || !user) return;
+    
+    const { data, error } = await supabase
+      .from('fields')
+      .insert({ user_id: user.id, name: newFieldName.trim() })
+      .select()
+      .single();
+    
+    if (!error && data) {
+      setFields(prev => [...prev, { id: data.id, name: data.name }]);
+      setFormData(prev => ({ ...prev, fieldId: data.id, fieldName: data.name }));
+      setNewFieldName('');
+      setShowNewField(false);
+      toast.success('Field added!');
+    }
+  };
 
   const [evidence, setEvidence] = useState<{
     photos: File[];
@@ -264,9 +313,83 @@ export function AddActivityFlow({ onClose, onSave }: AddActivityFlowProps) {
         {/* Step 2: Details */}
         {step === 'details' && (
           <div className="animate-fade-in-up space-y-4">
-            <h2 className="text-xl font-semibold text-foreground mb-2">Activity Details</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-2">Fill Quick Form</h2>
             
             <div className="glass rounded-2xl p-6 space-y-4">
+              {/* Date Picker */}
+              <div>
+                <Label>Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal mt-1",
+                        !formData.activityDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {formData.activityDate ? format(formData.activityDate, "dd/MM/yyyy") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={formData.activityDate}
+                      onSelect={(date) => date && setFormData(prev => ({ ...prev, activityDate: date }))}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* Field Select */}
+              <div>
+                <Label>Field</Label>
+                {!showNewField ? (
+                  <div className="flex gap-2 mt-1">
+                    <Select
+                      value={formData.fieldId}
+                      onValueChange={(value) => {
+                        const field = fields.find(f => f.id === value);
+                        setFormData(prev => ({ ...prev, fieldId: value, fieldName: field?.name || '' }));
+                      }}
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Select a field" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {fields.map((field) => (
+                          <SelectItem key={field.id} value={field.id}>
+                            {field.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button variant="outline" size="icon" onClick={() => setShowNewField(true)}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2 mt-1">
+                    <Input
+                      value={newFieldName}
+                      onChange={(e) => setNewFieldName(e.target.value)}
+                      placeholder="Enter field name"
+                      className="flex-1"
+                    />
+                    <Button variant="outline" size="icon" onClick={handleAddField}>
+                      <Check className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => setShowNewField(false)}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {/* Crop */}
               <div>
                 <Label htmlFor="crop">Crop</Label>
                 <Input
@@ -278,18 +401,31 @@ export function AddActivityFlow({ onClose, onSave }: AddActivityFlowProps) {
                 />
               </div>
 
+              {/* Activity Date & Time (auto-filled) */}
+              <div>
+                <Label>Activity Date & Time</Label>
+                <Input
+                  value={format(new Date(), "dd/MM/yyyy HH:mm")}
+                  disabled
+                  className="mt-1 bg-muted"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Auto-filled with current time</p>
+              </div>
+
+              {/* Notes */}
               <div>
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea
                   id="notes"
                   value={formData.notes}
                   onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                  placeholder="Describe what you did..."
+                  placeholder="Short description of the activity..."
                   className="mt-1"
-                  rows={3}
+                  rows={2}
                 />
               </div>
 
+              {/* Inputs Used */}
               <div>
                 <Label htmlFor="inputsUsed">Inputs Used (optional)</Label>
                 <Input
@@ -301,6 +437,7 @@ export function AddActivityFlow({ onClose, onSave }: AddActivityFlowProps) {
                 />
               </div>
 
+              {/* Yield Estimate */}
               <div>
                 <Label htmlFor="yieldEstimate">Yield Estimate (optional)</Label>
                 <Input
