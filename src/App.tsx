@@ -8,6 +8,8 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import FarmerDashboard from "./pages/FarmerDashboard";
 import ExtensionDashboard from "./pages/ExtensionDashboard";
+import InstitutionDashboard from "./pages/InstitutionDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +26,8 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<FarmerDashboard />} />
             <Route path="/extension-dashboard" element={<ExtensionDashboard />} />
+            <Route path="/institution-dashboard" element={<InstitutionDashboard />} />
+            <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
